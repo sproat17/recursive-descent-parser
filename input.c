@@ -19,6 +19,8 @@ int fpeek(void);
 
 int j = 0;
 int k = 0;
+int depth = 0;
+char * non_terminal[16];
 char * tokens[16];
 char name[20];
 FILE * fp;
@@ -187,9 +189,15 @@ char * scan(char ch) {
 }
 
 void match(char *expected){
+  depth += 6;
   if(!(strcmp(tokens[k], expected))){
-    printf("\t<%s>\n \t\t%s\n\t</%s>\n", expected, expected, expected);
+    printf("%*c<%s>\n", depth, ' ', expected);
+    depth += 6;
+    printf("%*c%s\n", depth, ' ', expected);
+    depth -= 6;
+    printf("%*c<%s>\n", depth, ' ', expected);
     k++;
+    depth -= 6;
   } else {
     printf("Parse Error 0\n");
     exit(0);
@@ -214,26 +222,29 @@ void program(){
 }
 
 void stmt_list(void){
-  printf("\t<stmt_list>\n");
+  depth += 6;
+  printf("%*c<stmt_list>\n", depth, ' ');
   if(!(strcmp(tokens[k], "id"))){
-      stmt();
-      stmt_list();
-    } else if(!(strcmp(tokens[k], "read"))) {
-      stmt();
-      stmt_list();
-    } else if(!(strcmp(tokens[k], "write"))) {
-      stmt();
-      stmt_list();
-    } else if(!(strcmp(tokens[k], "$$"))) {
-    } else {
-      printf("Parse Error 2");
-      exit(0);
-    }
-  printf("\t</stmt_list>\n");
+    stmt();
+    stmt_list();
+  } else if(!(strcmp(tokens[k], "read"))) {
+    stmt();
+    stmt_list();
+  } else if(!(strcmp(tokens[k], "write"))) {
+    stmt();
+    stmt_list();
+  } else if(!(strcmp(tokens[k], "$$"))) {
+  } else {
+    printf("Parse Error 2");
+    exit(0);
+  }
+  printf("%*c<stmt_list>\n", depth, ' ');
+  depth -= 6;
 }
 
 void stmt(void){
-  printf("<stmt>\n");
+  depth += 6;
+  printf("%*c<stmt>\n", depth, ' ');
   if(!(strcmp(tokens[k], "id"))){
     match("id");
     match("assign");
@@ -247,11 +258,13 @@ void stmt(void){
   } else {
     printf("Parse Error 3\n");
   }
-  printf("</stmt>\n");
+  printf("%*c</stmt>\n", depth, ' ');
+  depth -= 6;
 }
 
 void expr(void){
-  printf("<expr>\n");
+  depth += 6;
+  printf("%*c<expr>\n", depth, ' ');
   if(!(strcmp(tokens[k], "id"))){
     term();
     term_tail();
@@ -264,11 +277,13 @@ void expr(void){
   } else {
     printf("Parse Error 4\n");
   }
-  printf("</expr>\n");
+  printf("%*c</expr>\n", depth, ' ');
+  depth -= 6;
 }
 
 void term_tail(void){
-  printf("<term_tail>\n");
+  depth += 6;
+  printf("%*c<term_tail>\n", depth, ' ');
   if(!(strcmp(tokens[k], "plus"))){
     add_op();
     term();
@@ -285,14 +300,16 @@ void term_tail(void){
   } else if(!(strcmp(tokens[k], "write"))) {
   } else if(!(strcmp(tokens[k], "$$"))) {
   } else {
-    printf("Parse Error 5\n");
+    printf("Parse Error 6\n");
     exit(0);
   }
-  printf("</term_tail>\n");
+  printf("%*c</term_tail>\n", depth, ' ');
+  depth -= 6;
 }
 
 void term(void){
-  printf("<term>\n");
+  depth += 6;
+  printf("%*c<term>\n", depth, ' ');
   if(!(strcmp(tokens[k], "id"))){
     factor();
     factor_tail();
@@ -305,11 +322,13 @@ void term(void){
   } else {
     printf("Parse Error 6\n");
   }
-  printf("</term>\n");
+  printf("%*c</term>\n", depth, ' ');
+  depth -= 6;
 }
 
 void factor_tail(void){
-  printf("<factor_tail>\n");
+  depth += 6;
+  printf("%*c<factor_tail>\n", depth, ' ');
   if(!(strcmp(tokens[k], "times"))){
     mult_op();
     factor();
@@ -327,11 +346,13 @@ void factor_tail(void){
     printf("Parse Error 7\n");
     exit(0);
   }
-  printf("</factor_tail>\n");
+  printf("%*c</factor_tail>\n", depth, ' ');
+  depth -= 6;
 }
 
 void factor(void){
-  printf("<factor>\n");
+  depth += 6;
+  printf("%*c<factor>\n", depth, ' ');
   if(!(strcmp(tokens[k], "id"))){
     match("id");
   } else if(!(strcmp(tokens[k], "number"))){
@@ -343,11 +364,13 @@ void factor(void){
   } else {
     printf("Parse Error 8\n");
   }
-  printf("</factor>\n");
+  printf("%*c</factor>\n", depth, ' ');
+  depth -= 6;
 }
 
 void add_op(void){
-  printf("<add_op>\n");
+  depth += 6;
+  printf("%*c<add_op>\n", depth, ' ');
   if(!(strcmp(tokens[k], "plus"))){
     match("plus");
   } else if(!(strcmp(tokens[k], "minus"))){
@@ -355,17 +378,20 @@ void add_op(void){
   } else {
     printf("Parse Error 9\n");
   }
-  printf("</add_op>\n");
+  printf("%*c</add_op>\n", depth, ' ');
+  depth -= 6;
 }
 
 void mult_op(void){
-  printf("<mult_op>\n");
+  depth += 6;
+  printf("%*c<mult_op>\n", depth, ' ');
   if(!(strcmp(tokens[k], "times"))){
     match("times");
   } else if(!(strcmp(tokens[k], "div"))){
     match("div");
   } else {
-    printf("Parse Error 10\n");
+    printf("Parse Error 6\n");
   }
-  printf("</mult_op>\n");
+  printf("%*c</mult_op>\n", depth, ' ');
+  depth -= 6;
 }

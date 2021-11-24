@@ -20,7 +20,6 @@ int fpeek(void);
 int j = 0;
 int k = 0;
 int depth = 0;
-char * non_terminal[16];
 char * tokens[16];
 char name[20];
 FILE * fp;

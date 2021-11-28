@@ -20,6 +20,7 @@ int fpeek(void);
 int j = 0;
 int k = 0;
 int depth = 0;
+char * hold[16];
 char * tokens[16];
 char name[20];
 FILE * fp;
@@ -37,22 +38,21 @@ int main(void) {
     fp = fopen(name, "r");
   }
 
-  search();
-  printf("\n");
-  program();
-  return 0;
-}
-
-void search(void) {
   char ch;
   for (; (ch = fgetc(fp)) != EOF;) {
     tokens[j] = scan(ch);
   }
+
   tokens[j] = "$$";
 
-  for (int i = 0; i < j; i++) {
-    printf("%s ", tokens[i]);
+  for (int i = 0; i < j+1; i++) {
+    if(hold[i] == NULL){
+      hold[i] = tokens[i];
+    }
   }
+
+  program();
+  return 0;
 }
 
 int fpeek(void) {
@@ -67,11 +67,12 @@ void next(void) {
 
 void error(void) {
   printf("error\n");
-  exit(1);
+  exit(0);
 }
 
 char * scan(char ch) {
-
+  char * num = malloc(sizeof(64));
+  int i = 0;
   switch (ch) {
     case ' ':
       break;
@@ -112,7 +113,6 @@ char * scan(char ch) {
       j++;
       return "minus";
       break;
-
     case ':':
       if (fpeek() == '=') {
         next();
@@ -128,35 +128,50 @@ char * scan(char ch) {
       break;
 
     case '.':
+      num[i] = '.';
+      i++;
       if (isdigit(fpeek())) {
+        num[i] = fpeek();
         next();
-        j++;
-        return "number";
+        i++;
       } else {
         error();
       }
       while (isdigit(fpeek())) {
-        next();
+         num[i] = fpeek();
+         i++;
+         next();
       }
-      break;
+      j++;
+      hold[j] = num;
+      return "number";
     default:
       if (isdigit(ch)) {
+        num[i] = ch;
+        i++;
         while ((isdigit(fpeek())) | (fpeek() == '.')) {
+          num[i] = fpeek();
+          i++;
           next();
           if (fpeek() == '.') {
+            num[i] = fpeek();
+            i++;
             next();
             while (isdigit(fpeek())) {
+              num[i] = fpeek();
+              i++;
               next();
             }
+            hold[j] = num;
             j++;
             return "number";
           }
         }
+        hold[j] = num;
         j++;
         return "number";
 
       } else if (isalpha(ch)) {
-
         char * longest = malloc(sizeof(64));
         int k = 0;
         longest[k] = ch;
@@ -175,6 +190,7 @@ char * scan(char ch) {
           return "write";
         }
         if ((strcmp(longest, "write")) && (strcmp(longest, "read"))) {
+          hold[j] = longest;
           j++;
           return "id";
         }
@@ -192,9 +208,9 @@ void match(char *expected){
   if(!(strcmp(tokens[k], expected))){
     printf("%*c<%s>\n", depth, ' ', expected);
     depth += 6;
-    printf("%*c%s\n", depth, ' ', expected);
+    printf("%*c%s\n", depth, ' ', hold[k]);
     depth -= 6;
-    printf("%*c<%s>\n", depth, ' ', expected);
+    printf("%*c</%s>\n", depth, ' ', expected);
     k++;
     depth -= 6;
   } else {
@@ -203,7 +219,7 @@ void match(char *expected){
   }
 }
 
-void program(){
+void program(void) {
   printf("<Program>\n");
   if(!(strcmp(tokens[k], "id"))){
     stmt_list();
@@ -237,7 +253,7 @@ void stmt_list(void){
     printf("Parse Error 2");
     exit(0);
   }
-  printf("%*c<stmt_list>\n", depth, ' ');
+  printf("%*c</stmt_list>\n", depth, ' ');
   depth -= 6;
 }
 
@@ -275,6 +291,7 @@ void expr(void){
     term_tail();
   } else {
     printf("Parse Error 4\n");
+    exit(0);
   }
   printf("%*c</expr>\n", depth, ' ');
   depth -= 6;
@@ -291,9 +308,7 @@ void term_tail(void){
     add_op();
     term();
     term_tail();
-  } else if(!(strcmp(tokens[k], "lparen"))){
-    term();
-    term_tail();
+  } else if(!(strcmp(tokens[k], "rparen"))){
   } else if(!(strcmp(tokens[k], "id"))){
   } else if(!(strcmp(tokens[k], "read"))) {
   } else if(!(strcmp(tokens[k], "write"))) {
@@ -332,12 +347,14 @@ void factor_tail(void){
     mult_op();
     factor();
     factor_tail();
-  } else if(!(strcmp(tokens[k], "div"))){
+  } else if(!(strcmp(tokens[k], "division"))){
     mult_op();
     factor();
     factor_tail();
   } else if(!(strcmp(tokens[k], "plus"))){
   } else if(!(strcmp(tokens[k], "minus"))) {
+  } else if(!(strcmp(tokens[k], "rparen"))) {
+  } else if(!(strcmp(tokens[k], "id"))){
   } else if(!(strcmp(tokens[k], "read"))) {
   } else if(!(strcmp(tokens[k], "write"))) {
   } else if(!(strcmp(tokens[k], "$$"))) {
@@ -386,8 +403,8 @@ void mult_op(void){
   printf("%*c<mult_op>\n", depth, ' ');
   if(!(strcmp(tokens[k], "times"))){
     match("times");
-  } else if(!(strcmp(tokens[k], "div"))){
-    match("div");
+  } else if(!(strcmp(tokens[k], "division"))){
+    match("division");
   } else {
     printf("Parse Error 6\n");
   }
